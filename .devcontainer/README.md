@@ -12,6 +12,24 @@ FROM ghcr.io/libodynamics/project_template/devcontainer:latest
 
 公司策略是统一使用 `latest`。派生项目默认继承这个镜像，并在自己的 `.devcontainer/Dockerfile` 中追加项目专用工具链、SDK、模拟器、数据库客户端、硬件工具或缓存配置。
 
+如果该基础镜像保持为 private GHCR package，派生项目 CI 不能依赖匿名 pull。先在基础镜像 package 的 `Manage Actions access` 中给派生仓库授予 `Read` 权限，然后在需要构建 `.devcontainer/Dockerfile` 或直接使用该镜像的 workflow job 中保留：
+
+```yaml
+permissions:
+  contents: read
+  packages: read
+
+steps:
+  - uses: actions/checkout@v6
+  - uses: docker/login-action@v4
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      password: ${{ secrets.GITHUB_TOKEN }}
+```
+
+非 GitHub CI 或开发者本机需要拉取 private 镜像时，使用带 `read:packages` scope 的个人或机器人 token 登录 `ghcr.io`。真实 token 只能进入 CI secret、本机凭据管理或一次性 shell 环境变量，不能写入 Dockerfile、devcontainer 配置或仓库文档示例。
+
 模板仓库固定使用以下 Docker 名称：
 
 | 用途 | 名称 |

@@ -104,6 +104,8 @@
 
 `.devcontainer/base.Dockerfile` 仅用于维护基础镜像。派生项目默认删除它和对应的基础镜像发布 workflow；只有项目需要自建基础镜像供多个工作区、子项目或 CI 复用时才保留。保留时必须在 README 和 CI 中说明镜像名、tag 策略、发布 registry、触发条件、维护责任、更新节奏和回滚方式。
 
+继承 private GHCR 基础镜像的项目，必须在 CI 中显式处理鉴权。GitHub Actions 优先使用 `GITHUB_TOKEN`：job permissions 至少包含 `contents: read` 和 `packages: read`，并在构建或使用镜像前通过 `docker/login-action` 登录 `ghcr.io`。同时，基础镜像 package 的 `Manage Actions access` 必须给调用方仓库授予 `Read` 权限。非 GitHub CI 或开发者本机只允许通过具备 `read:packages` scope 的个人或机器人 token 登录 registry；真实 token 不得写入 Dockerfile、Dev Container 配置、README、脚本默认值或提交历史。
+
 模板 Dev Container 默认使用 `dev` 用户作为交互用户，默认 shell 是 `zsh`，并允许免密码 `sudo`。Dockerfile 构建阶段仍按 Docker 默认行为使用 root；派生项目确实需要交互式密码时，必须在 README 说明原因和设置方式。
 
 Docker 命名约定：

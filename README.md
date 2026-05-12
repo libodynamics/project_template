@@ -37,6 +37,7 @@ docker exec "$DEVCONTAINER_NAME" bash -lc 'git config --global --add safe.direct
 - [ ] 替换 `README.md`、`AGENTS.md`、`SECURITY.md` 和文档模板中的项目占位内容。
 - [ ] 确认项目名称、仓库名、包名、镜像名、Dev Container `name`、常驻 Dev Container 容器名、项目运行时容器名与发布目标。
 - [ ] 默认删除 `.devcontainer/base.Dockerfile` 和基础镜像发布 workflow；只有项目要维护自己的基础镜像时才保留，并说明镜像名、发布目标和维护责任。
+- [ ] 如果继承的基础镜像是 private GHCR package，在该 package 的 `Manage Actions access` 中授予本仓库 `Read` 权限，并在 CI 中保留 `packages: read` 与 `docker/login-action`。
 - [ ] 根据真实团队更新 `.github/CODEOWNERS`。
 - [ ] 确认 MIT 许可证是否适用；不适用时替换 `LICENSE` 并同步 README。
 - [ ] 补齐安装、编译、运行、测试、打包、发布命令；这些命令必须在常驻 Dev Container 容器或 CI/self-hosted runner 中执行。
@@ -69,6 +70,8 @@ TODO：写清楚本项目实际使用的命令。
 默认 Dev Container 基于 `ghcr.io/libodynamics/project_template/devcontainer:latest`，并安装通用开发、文档、协作、Node.js 和 Rust 基础工具。模板仓库用 `.devcontainer/base.Dockerfile` 构建并发布这个基础镜像；派生项目在 `.devcontainer/Dockerfile` 中继续 `FROM` 该 `latest` 镜像并按需补充 SDK、数据库、模拟器、硬件工具或项目专用依赖。
 
 `.devcontainer/base.Dockerfile` 仅供 `project_template` 仓库维护通用基础镜像。派生项目默认删除它和对应的基础镜像发布 workflow；如果项目需要自建基础镜像，必须在本文件说明镜像名、tag 策略、发布 registry、触发条件、维护责任和回滚方式。
+
+如果基础镜像保持为 private GHCR package，派生项目的 GitHub Actions 需要两个前置条件：先在基础镜像 package 的 `Manage Actions access` 中给派生仓库授予 `Read` 权限，再在 CI job 中声明 `packages: read` 并使用 `docker/login-action` 登录 `ghcr.io`。不要把 PAT 或真实 token 写入仓库；非 GitHub CI 或开发者本机拉取 private 镜像时，应使用具备 `read:packages` scope 的个人或机器人 token，通过 CI secret 或本机 `docker login ghcr.io` 注入。
 
 模板仓库的 Docker 命名约定如下，派生项目应在初始化时替换为自己的稳定名称：
 
